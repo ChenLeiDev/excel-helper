@@ -34,7 +34,7 @@ public class InvalidInfo {
         return info.entrySet();
     }
 
-    public LinkedHashMap<String, String> getInfo() {
+    public Map<String, String> getInfo() {
         return info;
     }
 }

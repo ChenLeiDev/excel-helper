@@ -2,6 +2,8 @@ package org.lc.fe.util;
 
 public class StringUtil {
 
+    private StringUtil(){}
+
     public static boolean isNotBlank(final String sequence){
         if (sequence == null) {
             return false;

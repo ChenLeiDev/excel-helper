@@ -7,7 +7,6 @@ import org.apache.poi.xssf.usermodel.*;
 import org.lc.fe.constant.Type;
 import org.lc.fe.exception.ErrorInfo;
 import org.lc.fe.exception.FieldValueMappingException;
-import org.cl.fe.model.*;
 import org.lc.fe.model.*;
 import org.lc.fe.util.ArrayUtil;
 import org.lc.fe.util.CollectionUtil;
@@ -15,7 +14,6 @@ import org.lc.fe.util.StringUtil;
 import org.lc.fe.ExcelDataValidator;
 import org.lc.fe.ExcelHelper;
 import org.lc.fe.ExcelHelperConfiguration;
-import own.cl.excel.model.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +22,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static javax.swing.UIManager.get;
-
 public class ExcelData {
 
     private static final CellCopyPolicy CELL_COPY_POLICY = new CellCopyPolicy();
+
+    private ExcelData(){}
 
     public static void setPulls(int dataSize, ClassAndTemplateInfo classAndTemplateInfo){
         int endRow = dataSize + classAndTemplateInfo.startRowNum;//无数据则填充预留的一行
@@ -256,7 +254,7 @@ public class ExcelData {
 
     private static Object getFieldValue(UnitElement unitElement, Object dataElement, Map<Object, Integer> compute, String header) throws IllegalAccessException {
         List<ParentField> parents = unitElement.parents;
-        if(parents.size() > 0){
+        if(!parents.isEmpty()){
             for (int index = 0; index < parents.size(); index++){
                 dataElement = parents.get(index).field.get(dataElement);
                 if(dataElement == null){
@@ -348,7 +346,7 @@ public class ExcelData {
         List<ParentField> parents = unitElement.parents;
         Object lastLevel = instance;
         Object currentLevel = instance;
-        if(parents.size() > 0){
+        if(!parents.isEmpty()){
             for (int index = 0; index < parents.size(); index++){
                 ParentField parentField = parents.get(index);
                 currentLevel = parentField.field.get(currentLevel);

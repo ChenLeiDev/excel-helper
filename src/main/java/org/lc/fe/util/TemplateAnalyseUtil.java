@@ -23,6 +23,8 @@ public class TemplateAnalyseUtil {
 
     private static final DiskFileItemFactory DISK_FILE_ITEM_FACTORY = new DiskFileItemFactory(4, null);
 
+    private TemplateAnalyseUtil(){}
+
     public static <T> void analyseTemplate(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, InputStream inputStream){
         ExcelModel excelModel = clazz.getDeclaredAnnotation(ExcelModel.class);
         String templateFileName = excelModel.template();
@@ -105,7 +107,6 @@ public class TemplateAnalyseUtil {
     public static FileItem getTemplateFileFromStream(String name, InputStream templateInput){
         FileItem temp = null;
         OutputStream tempOutput = null;
-        boolean exc = false;
         try{
             temp = createFileItem(name);
             tempOutput = temp.getOutputStream();
@@ -116,7 +117,6 @@ public class TemplateAnalyseUtil {
             }
             return temp;
         }catch (IOException ioe){
-            exc = true;
             ioe.printStackTrace();
             return null;
         }finally {
@@ -145,7 +145,6 @@ public class TemplateAnalyseUtil {
         FileItem temp = createFileItem(name);
         InputStream templateInput = null;
         OutputStream tempOutput = null;
-        boolean exc = false;
         try{
             templateInput = new FileInputStream(template);
             tempOutput = temp.getOutputStream();
@@ -156,7 +155,6 @@ public class TemplateAnalyseUtil {
             }
             return temp;
         }catch (IOException ioe){
-            exc = true;
             ioe.printStackTrace();
             return null;
         }finally {
@@ -182,7 +180,6 @@ public class TemplateAnalyseUtil {
         FileItem temp = null;
         InputStream templateInput = null;
         OutputStream tempOutput = null;
-        boolean exc = false;
         try{
             templateInput = classPathResource.getInputStream();
             temp = createFileItem(name);
@@ -194,7 +191,6 @@ public class TemplateAnalyseUtil {
             }
             return temp;
         }catch (IOException ioe){
-            exc = true;
             ioe.printStackTrace();
             return null;
         }finally {

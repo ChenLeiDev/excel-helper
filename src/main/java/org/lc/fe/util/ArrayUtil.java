@@ -13,4 +13,6 @@ public class ArrayUtil {
         return (array != null && array.length != 0);
     }
 
+    private ArrayUtil(){}
+
 }

@@ -2,6 +2,8 @@ package org.lc.fe.constant;
 
 public class AnnotationConstants {
 
+    private AnnotationConstants(){}
+
     public static final String DEFAULT_TEMPLATE_FILE_PATH = "static/template";
 
     public static final String DEFAULT_SHEET = "";

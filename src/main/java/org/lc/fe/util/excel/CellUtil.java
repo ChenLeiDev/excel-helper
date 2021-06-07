@@ -10,6 +10,8 @@ import java.util.Date;
 
 public class CellUtil {
 
+    private CellUtil(){}
+
     public static void writeValue(XSSFRow row, Object value, Type type, int cellNum){
         XSSFCell cell = row.getCell(cellNum);
         if(cell == null){
@@ -31,7 +33,7 @@ public class CellUtil {
         switch (type){
             case STRING:
                 cell.setCellValue(String.valueOf(value));
-                ;break;
+                break;
             case NUMBER:
                 cell.setCellValue(Double.valueOf(String.valueOf(value)));
                 break;
@@ -40,10 +42,10 @@ public class CellUtil {
                 break;
             case BOOLEAN:
                 cell.setCellValue((Boolean) value);
-                ;break;
+                break;
             case FORMULA:
                 cell.setCellValue((String)value);
-                ;break;
+                break;
         }
     }
 
@@ -59,7 +61,7 @@ public class CellUtil {
                 if(String.class.equals(valueType)){
                     return value;
                 }
-                ;break;
+                break;
             case NUMBER:
                 value = cell.getNumericCellValue();
                 break;
@@ -71,13 +73,13 @@ public class CellUtil {
                 break;
             case BOOLEAN:
                 value = cell.getBooleanCellValue();
-                ;break;
+                break;
             case FORMULA:
                 value = cell.getCellFormula();
                 if(String.class.equals(valueType)){
                     return value;
                 }
-                ;break;
+                break;
         }
         if(value == null){
             return null;

@@ -24,6 +24,6 @@ public final class ImportData<T> {
     }
 
     public void addInvalid(T data, InvalidInfo invalidInfo){
-        invalid.add(new DataNode<T>(invalidInfo, data));
+        invalid.add(new DataNode<>(invalidInfo, data));
     }
 }

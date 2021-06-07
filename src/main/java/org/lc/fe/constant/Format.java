@@ -1,6 +1,9 @@
 package org.lc.fe.constant;
 
 public class Format {
+
+    private Format(){}
+
     public static final String F0 = "General";
     public static final String F1 = "0";
     public static final String F2 = "0.00";

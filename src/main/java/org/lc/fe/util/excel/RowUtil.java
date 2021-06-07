@@ -13,6 +13,8 @@ import java.util.Set;
 
 public class RowUtil {
 
+    private RowUtil(){}
+
     public static void writeHeaders(XSSFRow row, Collection<String> values, int startCell){
         Iterator<Cell> cellIterator = row.cellIterator();
         Set<String> distinct = new HashSet<>();
@@ -23,13 +25,13 @@ public class RowUtil {
                 if(StringUtil.isNotBlank(header)){
                     distinct.add(header);
                 }
-            }catch (IllegalStateException e){}
+            }catch (IllegalStateException e){
+                e.printStackTrace();
+            }
         }
         for (String value: values) {
-            if(!UnitElement.HAS_FUNCTION.equals(value)){
-                if(distinct.add(value)){
-                    CellUtil.writeValue(row, value, Type.STRING, startCell++);
-                }
+            if(!UnitElement.HAS_FUNCTION.equals(value) && distinct.add(value)){
+                CellUtil.writeValue(row, value, Type.STRING, startCell++);
             }
         }
     }

@@ -4,7 +4,6 @@ import org.lc.fe.ExcelPullTransfer;
 import org.lc.fe.annotation.ExcelFunction;
 import org.lc.fe.constant.AnnotationConstants;
 import org.lc.fe.exception.ErrorInfo;
-import org.cl.fe.model.*;
 import org.lc.fe.model.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +14,6 @@ import org.lc.fe.annotation.ExcelColumn;
 import org.lc.fe.annotation.ExcelDynamicModel;
 import org.lc.fe.constant.Function;
 import org.lc.fe.exception.ColumnDuplicateException;
-import own.cl.excel.model.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -49,7 +47,6 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
 
     private static int recursionAnalyseClass(Class clazz, ClassAndTemplateInfo classAndTemplateInfo, UnitElement unitElement, int level, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass) throws ColumnDuplicateException {
         List<Field> fields = getOwnExcelColumnFields(null, clazz);
-        List<Field> parents = new ArrayList<>();
         for (Field field: fields) {
             if(0 == level || unitElement == null){
                 unitElement = new UnitElement();//设置对应列所需要的信息
@@ -119,7 +116,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
                 }
                 if(dynamicColumn != null){
                     List<String> headersByDynamicColumn = dynamicColumn.getHeadersByDynamicColumn(column);
-                    if(headersByDynamicColumn.size() > 0){
+                    if(!headersByDynamicColumn.isEmpty()){
                         for (String header: headersByDynamicColumn) {
                             putUnitElement(classAndTemplateInfo, header, unitElement);
                         }

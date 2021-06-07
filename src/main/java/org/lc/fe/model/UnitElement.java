@@ -1,6 +1,5 @@
 package org.lc.fe.model;
 
-import org.lc.fe.ExcelDataValidator;
 import org.lc.fe.constant.Function;
 import org.lc.fe.constant.Type;
 
@@ -19,5 +18,4 @@ public class UnitElement {
     public Function function;
     public String condition;
     public String column;
-    public ExcelDataValidator dataValid;
 }

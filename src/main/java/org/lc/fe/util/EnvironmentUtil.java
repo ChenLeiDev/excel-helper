@@ -3,6 +3,9 @@ package org.lc.fe.util;
 import java.util.Objects;
 
 public class EnvironmentUtil {
+
+    private EnvironmentUtil(){}
+
     /**
      * Class 是否从 ide 启动
      *
