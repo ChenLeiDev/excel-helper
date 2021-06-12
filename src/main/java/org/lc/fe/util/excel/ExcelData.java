@@ -1,5 +1,6 @@
 package org.lc.fe.util.excel;
 
+import com.alibaba.fastjson.JSON;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
@@ -15,6 +16,7 @@ import org.lc.fe.ExcelDataValidator;
 import org.lc.fe.ExcelHelper;
 import org.lc.fe.ExcelHelperConfiguration;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,48 +159,51 @@ public class ExcelData {
     }
 
     private static void dealFunction(ClassAndTemplateInfo classAndTemplateInfo){
-        if(classAndTemplateInfo.unitElements.get(UnitElement.HAS_FUNCTION) != null){//求底行和
-            int endRowNum = classAndTemplateInfo.baseRowNum;
-            if(classAndTemplateInfo.startRowNum > endRowNum){
-                endRowNum++;
+        if(classAndTemplateInfo.unitElements.get(UnitElement.HAS_FUNCTION) == null){//求底行和
+            return;
+        }
+        int endRowNum = classAndTemplateInfo.baseRowNum;
+        if(classAndTemplateInfo.startRowNum > endRowNum){
+            endRowNum++;
+        }
+        XSSFRow lastRow = classAndTemplateInfo.xssfSheet.getRow(endRowNum);
+        if(lastRow == null){
+            lastRow = classAndTemplateInfo.xssfSheet.createRow(endRowNum);
+        }
+        for(int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
+            String headerCell = classAndTemplateInfo.headerCells[col];
+            if(headerCell == null){
+                continue;
             }
-            XSSFRow lastRow = classAndTemplateInfo.xssfSheet.getRow(endRowNum);
-            if(lastRow == null){
-                lastRow = classAndTemplateInfo.xssfSheet.createRow(endRowNum);
+            UnitElement unitElement = classAndTemplateInfo.unitElements.get(headerCell);
+            if(unitElement == null){
+                continue;
             }
-            for(int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
-                String headerCell = classAndTemplateInfo.headerCells[col];
-                if(headerCell != null){
-                    UnitElement unitElement = classAndTemplateInfo.unitElements.get(headerCell);
-                    if(unitElement != null){
-                        XSSFCell cell = lastRow.getCell(col);
-                        if(cell == null){
-                            cell = lastRow.createCell(col);
-                        }
-                        XSSFCellStyle cellStyle = classAndTemplateInfo.xssfWorkbook.createCellStyle();
-                        if(lastRow == null || lastRow.getCell(col) == null){
-                            cellStyle.setAlignment(HorizontalAlignment.CENTER); //水平居中
-                            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   // 垂直居中
-                        }else {
-                            XSSFCell lastRowCell = lastRow.getCell(col);
-                            if(lastRowCell == null){
-                                cellStyle.setAlignment(HorizontalAlignment.CENTER); //水平居中
-                                cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   // 垂直居中
-                            }else {
-                                XSSFCellStyle lastRowCellStyle = lastRowCell.getCellStyle();
-                                cellStyle.setAlignment(lastRowCellStyle.getAlignmentEnum());
-                                cellStyle.setVerticalAlignment(lastRowCellStyle.getVerticalAlignmentEnum());
-                            }
-                        }
-                        cell.setCellStyle(cellStyle);
-                        if(unitElement.function != null){
-                            String formula = unitElement.function.getFormula(col, classAndTemplateInfo.startRowNum, endRowNum - 1, unitElement.condition);
-                            cell.setCellFormula(formula);
-                        }else{
-                            cell.setCellValue("--");
-                        }
-                    }
+            XSSFCell cell = lastRow.getCell(col);
+            if(cell == null){
+                cell = lastRow.createCell(col);
+            }
+            XSSFCellStyle cellStyle = classAndTemplateInfo.xssfWorkbook.createCellStyle();
+            if(lastRow == null || lastRow.getCell(col) == null){
+                cellStyle.setAlignment(HorizontalAlignment.CENTER); //水平居中
+                cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   // 垂直居中
+            }else {
+                XSSFCell lastRowCell = lastRow.getCell(col);
+                if(lastRowCell == null){
+                    cellStyle.setAlignment(HorizontalAlignment.CENTER); //水平居中
+                    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   // 垂直居中
+                }else {
+                    XSSFCellStyle lastRowCellStyle = lastRowCell.getCellStyle();
+                    cellStyle.setAlignment(lastRowCellStyle.getAlignmentEnum());
+                    cellStyle.setVerticalAlignment(lastRowCellStyle.getVerticalAlignmentEnum());
                 }
+            }
+            cell.setCellStyle(cellStyle);
+            if(unitElement.function != null){
+                String formula = unitElement.function.getFormula(col, classAndTemplateInfo.startRowNum, endRowNum - 1, unitElement.condition);
+                cell.setCellFormula(formula);
+            }else{
+                cell.setCellValue("--");
             }
         }
     }
@@ -206,46 +211,50 @@ public class ExcelData {
     public static void writeData(List data, ClassAndTemplateInfo classAndTemplateInfo, int startRow) throws IllegalAccessException {
         for (int index = 0; index < data.size(); index++) {
             Object dataElement = data.get(index);
-            if(dataElement != null){
-                classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.baseRowNum, classAndTemplateInfo.baseRowNum, startRow, CELL_COPY_POLICY);
-                XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
-                Map<Object, Integer> compute = new HashMap<>(0);
-                for(int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
-                    String headerCell = classAndTemplateInfo.headerCells[col];
-                    if(headerCell != null){
-                        UnitElement unitElement = classAndTemplateInfo.unitElements.get(headerCell);
-                        if(unitElement != null){
-                            XSSFCell cell = row.getCell(col);
-                            if(cell == null){
-                                cell = row.createCell(col);
-                            }
-                            Object value = null;
-                            if(dataElement.getClass().equals(DataNode.class)){
-                                value = unitElement.field.get(((DataNode)dataElement).getData());
-                                String comment = ((DataNode)dataElement).getInvalidInfo().getInvalid(unitElement.field.getName());
-                                if(comment != null){
-                                    XSSFComment cellComment = classAndTemplateInfo.drawingPatriarch.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
-                                    cellComment.setString(comment);
-                                    cell.setCellComment(cellComment);
-                                }
-                            }else{
-                                value = getFieldValue(unitElement, dataElement, compute, headerCell);
-                            }
-                            if(value != null){
-                                Type type = unitElement.type;
-                                if(unitElement.pulls != null){
-                                    String pullValue = classAndTemplateInfo.pullNodes.getOutValue(unitElement.pullsFlag, value);
-                                    if(pullValue != null){
-                                        value = pullValue;
-                                    }
-                                    type = Type.STRING;
-                                }
-                                CellUtil.writeValue(type, cell, value);
-                            }else{
-                                cell.setCellValue((String)null);
-                            }
-                        }
+            if(dataElement == null){
+                startRow++;
+                continue;
+            }
+            classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.baseRowNum, classAndTemplateInfo.baseRowNum, startRow, CELL_COPY_POLICY);
+            XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
+            Map<Object, Integer> compute = new HashMap<>(0);
+            for(int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
+                String headerCell = classAndTemplateInfo.headerCells[col];
+                if(headerCell == null){
+                    continue;
+                }
+                UnitElement unitElement = classAndTemplateInfo.unitElements.get(headerCell);
+                if(unitElement == null){
+                    continue;
+                }
+                XSSFCell cell = row.getCell(col);
+                if(cell == null){
+                    cell = row.createCell(col);
+                }
+                Object value = null;
+                if(dataElement.getClass().equals(DataNode.class)){
+                    value = unitElement.field.get(((DataNode)dataElement).getData());
+                    String comment = ((DataNode)dataElement).getInvalidInfo().getInvalid(unitElement.field.getName());
+                    if(comment != null){
+                        XSSFComment cellComment = classAndTemplateInfo.drawingPatriarch.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
+                        cellComment.setString(comment);
+                        cell.setCellComment(cellComment);
                     }
+                }else{
+                    value = getFieldValue(unitElement, dataElement, compute, headerCell);
+                }
+                if(value != null){
+                    Type type = unitElement.type;
+                    if(unitElement.pulls != null){
+                        String pullValue = classAndTemplateInfo.pullNodes.getOutValue(unitElement.pullsFlag, value);
+                        if(pullValue != null){
+                            value = pullValue;
+                        }
+                        type = Type.STRING;
+                    }
+                    CellUtil.writeValue(type, cell, value);
+                }else{
+                    cell.setCellValue((String)null);
                 }
             }
             startRow++;
@@ -254,38 +263,37 @@ public class ExcelData {
 
     private static Object getFieldValue(UnitElement unitElement, Object dataElement, Map<Object, Integer> compute, String header) throws IllegalAccessException {
         List<ParentField> parents = unitElement.parents;
-        if(!parents.isEmpty()){
-            for (int index = 0; index < parents.size(); index++){
-                dataElement = parents.get(index).field.get(dataElement);
-                if(dataElement == null){
-                    return null;
-                }
-                if(dataElement instanceof List){
-                    Object computeKey = unitElement.field;
-                    List listDataElement = (List)dataElement;
-                    Integer computeNum = compute.get(computeKey);
-                    if(computeNum == null){
-                        computeNum = 0;
-                    }
-                    if(computeNum < listDataElement.size()){
-                        dataElement = listDataElement.get(computeNum);
-                        if(index == parents.size() - 1){
-                            compute.put(computeKey, computeNum + 1);
-                            return unitElement.field.get(dataElement);
-                        }
-                    }else{
-                        return null;
-                    }
-                }else{
-                    if(index == parents.size() - 1){
-                        return unitElement.field.get(dataElement);
-                    }
-                }
-            }
-            return null;
-        }else{
+        if(parents.isEmpty()){
             return unitElement.field.get(dataElement);
         }
+        for (int index = 0; index < parents.size(); index++){
+            dataElement = parents.get(index).field.get(dataElement);
+            if(dataElement == null){
+                return null;
+            }
+            if(dataElement instanceof List){
+                Object computeKey = unitElement;
+                List listDataElement = (List)dataElement;
+                Integer computeNum = compute.get(computeKey);
+                if(computeNum == null){
+                    computeNum = 0;
+                }
+                if(computeNum < listDataElement.size()){
+                    dataElement = listDataElement.get(computeNum);
+                    if(index == parents.size() - 1){
+                        compute.put(computeKey, computeNum + 1);
+                        return unitElement.field.get(dataElement);
+                    }
+                }else{
+                    return null;
+                }
+            }else{
+                if(index == parents.size() - 1){
+                    return unitElement.field.get(dataElement);
+                }
+            }
+        }
+        return null;
     }
 
     public static String getColumnName(int col, int row){
@@ -298,75 +306,113 @@ public class ExcelData {
     public static <T> ImportData<T> readData(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo) throws FieldValueMappingException {
         ImportData<T> importData= new ImportData<>();
         int lastRowNum = classAndTemplateInfo.xssfSheet.getLastRowNum();
-        if(lastRowNum > classAndTemplateInfo.headerRowNum){
-            for (int startRow = classAndTemplateInfo.startRowNum; startRow < lastRowNum; startRow++){
-                XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
-                if(row != null){
-                    Map<String, Integer> compute = new HashMap<>();
-                    try{
-                        T instance = clazz.newInstance();
-                        for (int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
-                            UnitElement unitElement = classAndTemplateInfo.unitElements.get(classAndTemplateInfo.headerCells[col]);
-                            if(unitElement != null){
-                                XSSFCell cell = row.getCell(col);
-                                Type type = unitElement.type;
-                                if(unitElement.pulls != null){
-                                    type = Type.STRING;
-                                }
-                                Object value = CellUtil.readValue(type, cell, unitElement.field.getType());
-                                if(value != null){
-                                    setFieldValue(unitElement, value, instance, compute);
-                                }
-                            }
-                        }
-                        if(CollectionUtil.isNotEmpty(classAndTemplateInfo.validators)){
-                            InvalidInfo invalidInfo = new InvalidInfo();
-                            for (int i = 0; i < classAndTemplateInfo.validators.size(); i++){
-                                ExcelDataValidator excelDataValidator = classAndTemplateInfo.validators.get(i);
-                                excelDataValidator.valid(instance, invalidInfo);
-                            }
-                            if(invalidInfo.valid){
-                                importData.addValid(instance);
-                            }else {
-                                importData.addInvalid(instance, invalidInfo);
-                            }
-                        }else{
-                            importData.addValid(instance);
-                        }
-                    }catch (Exception e){
-                        throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
+        if(lastRowNum <= classAndTemplateInfo.headerRowNum){
+            return importData;
+        }
+        for (int startRow = classAndTemplateInfo.startRowNum; startRow < lastRowNum; startRow++){
+            XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
+            if(row == null){
+                continue;
+            }
+            Map<Object, Integer> compute = new HashMap<>();
+            try{
+                T instance = clazz.newInstance();
+                for (int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
+                    UnitElement unitElement = classAndTemplateInfo.unitElements.get(classAndTemplateInfo.headerCells[col]);
+                    if(unitElement == null){
+                        continue;
+                    }
+                    XSSFCell cell = row.getCell(col);
+                    Type type = unitElement.type;
+                    if(unitElement.pulls != null){
+                        type = Type.STRING;
+                    }
+                    Object value = CellUtil.readValue(type, cell, unitElement.field.getType());
+                    if(value != null){
+                        setFieldValue(unitElement, value, instance, compute);
                     }
                 }
+                if(CollectionUtil.isNotEmpty(classAndTemplateInfo.validators)){
+                    InvalidInfo invalidInfo = new InvalidInfo();
+                    for (int i = 0; i < classAndTemplateInfo.validators.size(); i++){
+                        ExcelDataValidator excelDataValidator = classAndTemplateInfo.validators.get(i);
+                        excelDataValidator.valid(instance, invalidInfo);
+                    }
+                    if(invalidInfo.valid){
+                        importData.addValid(instance);
+                    }else {
+                        importData.addInvalid(instance, invalidInfo);
+                    }
+                }else{
+                    importData.addValid(instance);
+                }
+            }catch (Exception e){
+//                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
+                e.printStackTrace();
             }
         }
         return importData;
     }
 
-    private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<String, Integer> compute) throws IllegalAccessException, InstantiationException {
+    private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
         List<ParentField> parents = unitElement.parents;
+        if(parents.isEmpty()){
+            unitElement.field.set(instance, value);
+            return;
+        }
         Object lastLevel = instance;
         Object currentLevel = instance;
-        if(!parents.isEmpty()){
-            for (int index = 0; index < parents.size(); index++){
-                ParentField parentField = parents.get(index);
-                currentLevel = parentField.field.get(currentLevel);
-                if (currentLevel == null){
-                    if(!Object.class.equals(parentField.subclass)){
-                        currentLevel = parentField.subclass.newInstance();
-                    }else {
-                        currentLevel = parentField.field.getType().newInstance();
-                    }
+        for (int index = 0; index < parents.size(); index++) {
+            ParentField parentField = parents.get(index);
+            if (lastLevel instanceof List) {
+                Object computeKey = unitElement;
+                Integer computeNum = compute.get(computeKey);
+                if(computeNum == null){
+                    computeNum = 0;
                 }
-                if (lastLevel instanceof List){
-                    ((List) lastLevel).add(currentLevel);
+                if(computeNum < ((List) lastLevel).size()){
+                    currentLevel = ((List) lastLevel).get(computeNum);
                 }else {
-                    parentField.field.set(lastLevel, currentLevel);
+                    currentLevel = null;
                 }
-                lastLevel = currentLevel;
-                currentLevel = null;
+                compute.put(computeKey, computeNum + 1);
+            } else {
+                currentLevel = parentField.field.get(lastLevel);
             }
-        }else {
-            unitElement.field.set(instance, value);
+            if (currentLevel == null) {
+                if (!Object.class.equals(parentField.subclass)) {
+                    currentLevel = parentField.subclass.newInstance();
+                    if(currentLevel instanceof List){
+                        java.lang.reflect.Type fieldType = parentField.field.getGenericType();
+                        if(fieldType instanceof ParameterizedType){
+                            ParameterizedType parameterizedType = (ParameterizedType)fieldType;
+                            java.lang.reflect.Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                            if(ArrayUtil.isNotEmpty(actualTypeArguments)){
+                                fieldType = actualTypeArguments[0];
+                            }
+                        }
+                        String typeName = fieldType.getTypeName();
+                        Object newInstance = Class.forName(typeName).newInstance();
+                        ((List) currentLevel).add(newInstance);
+                        lastLevel = currentLevel;
+                        currentLevel = newInstance;
+                    }
+                } else {
+                    currentLevel = parentField.field.getType().newInstance();
+                }
+            }
+            if (lastLevel instanceof List) {
+                ((List) lastLevel).add(currentLevel);
+            } else {
+                parentField.field.set(lastLevel, currentLevel);
+            }
+            lastLevel = currentLevel;
+            currentLevel = null;
+        }
+        if (lastLevel instanceof List) {
+            ((List) lastLevel).add(value);
+        } else {
+            unitElement.field.set(lastLevel, value);
         }
     }
 }

@@ -6,6 +6,7 @@ import org.lc.fe.exception.FieldValueMappingException;
 import org.lc.fe.model.ClassAndTemplateInfo;
 import org.lc.fe.model.DynamicColumn;
 import org.lc.fe.model.ImportData;
+import org.lc.fe.model.XlsxFile;
 import org.lc.fe.util.AnnotationAnalyseUtil;
 import org.lc.fe.util.TemplateAnalyseUtil;
 import org.lc.fe.util.excel.ExcelData;
@@ -31,7 +32,7 @@ public class ExcelHelper<T> {
      * @param type 注解类类型
      * @param <T>
      */
-    public static <T> FileItem exportXlsx(List data, Class<T> type) throws ColumnDuplicateException, FieldValueMappingException {
+    public static <T> XlsxFile exportXlsx(List data, Class<T> type) throws ColumnDuplicateException, FieldValueMappingException {
         return exportXlsx(data, type, null, null);
     }
 
@@ -42,7 +43,7 @@ public class ExcelHelper<T> {
      * @param excelPullTransferClass 下拉转换实现类
      * @param <T>
      */
-    public static <T> FileItem exportXlsx(List data, Class<T> type, Class<? extends ExcelPullTransfer> excelPullTransferClass) throws ColumnDuplicateException, FieldValueMappingException {
+    public static <T> XlsxFile exportXlsx(List data, Class<T> type, Class<? extends ExcelPullTransfer> excelPullTransferClass) throws ColumnDuplicateException, FieldValueMappingException {
         return exportXlsx(data, type, excelPullTransferClass, null);
     }
 
@@ -53,7 +54,7 @@ public class ExcelHelper<T> {
      * @param dynamicColumn 动态列对象
      * @param <T>
      */
-    public static <T> FileItem exportXlsx(List data, Class<T> type, DynamicColumn dynamicColumn) throws ColumnDuplicateException, FieldValueMappingException {
+    public static <T> XlsxFile exportXlsx(List data, Class<T> type, DynamicColumn dynamicColumn) throws ColumnDuplicateException, FieldValueMappingException {
         return exportXlsx(data, type, null, dynamicColumn);
     }
 
@@ -65,7 +66,7 @@ public class ExcelHelper<T> {
      * @param dynamicColumn 动态列对象
      * @param <T>
      */
-    public static <T> FileItem exportXlsx(List data, Class<T> type, Class<? extends ExcelPullTransfer> excelPullTransferClass, DynamicColumn dynamicColumn) throws ColumnDuplicateException, FieldValueMappingException {
+    public static <T> XlsxFile exportXlsx(List data, Class<T> type, Class<? extends ExcelPullTransfer> excelPullTransferClass, DynamicColumn dynamicColumn) throws ColumnDuplicateException, FieldValueMappingException {
         ClassAndTemplateInfo classAndTemplateInfo = new ClassAndTemplateInfo();
         AnnotationAnalyseUtil.analyseAnnotation(type, classAndTemplateInfo, dynamicColumn, excelPullTransferClass);
         TemplateAnalyseUtil.analyseTemplate(type, classAndTemplateInfo, dynamicColumn, null);
@@ -91,7 +92,7 @@ public class ExcelHelper<T> {
             outputStream = fileItem.getOutputStream();
             classAndTemplateInfo.xssfWorkbook.write(outputStream);
             outputStream.flush();
-            return fileItem;
+            return new XlsxFile(fileItem);
         } catch (IOException e) {
             exc = true;
             e.printStackTrace();
