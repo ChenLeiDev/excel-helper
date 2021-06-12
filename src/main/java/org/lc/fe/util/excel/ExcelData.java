@@ -406,13 +406,16 @@ public class ExcelData {
             } else {
                 parentField.field.set(lastLevel, currentLevel);
             }
-            lastLevel = currentLevel;
-            currentLevel = null;
+            if(index < parents.size() - 1){
+                lastLevel = currentLevel;
+                currentLevel = null;
+            }
         }
         if (lastLevel instanceof List) {
-            ((List) lastLevel).add(value);
+            unitElement.field.set(currentLevel, value);
+            ((List) lastLevel).add(currentLevel);
         } else {
-            unitElement.field.set(lastLevel, value);
+            unitElement.field.set(currentLevel, value);
         }
     }
 }
