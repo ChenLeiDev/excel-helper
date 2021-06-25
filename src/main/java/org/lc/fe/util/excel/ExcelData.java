@@ -243,19 +243,17 @@ public class ExcelData {
                 }else{
                     value = getFieldValue(unitElement, dataElement, compute, headerCell);
                 }
-                if(value != null){
-                    Type type = unitElement.type;
-                    if(unitElement.pulls != null){
+                Type type = unitElement.type;
+                if(unitElement.pulls != null){
+                    if(value != null){
                         String pullValue = classAndTemplateInfo.pullNodes.getOutValue(unitElement.pullsFlag, value);
                         if(pullValue != null){
                             value = pullValue;
                         }
-                        type = Type.STRING;
                     }
-                    CellUtil.writeValue(type, cell, value);
-                }else{
-                    cell.setCellValue((String)null);
+                    type = Type.STRING;
                 }
+                CellUtil.writeValue(type, cell, value);
             }
             startRow++;
         }
@@ -347,8 +345,8 @@ public class ExcelData {
                     importData.addValid(instance);
                 }
             }catch (Exception e){
-//                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
                 e.printStackTrace();
+                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
             }
         }
         return importData;
@@ -364,9 +362,9 @@ public class ExcelData {
         Object currentLevel = instance;
         for (int index = 0; index < parents.size(); index++) {
             ParentField parentField = parents.get(index);
+            Object computeKey = lastLevel;
             if (lastLevel instanceof List) {
-                Object computeKey = unitElement;
-                Integer computeNum = compute.get(computeKey);
+                Integer computeNum = compute.get(computeKey + "" + unitElement);
                 if(computeNum == null){
                     computeNum = 0;
                 }
@@ -375,9 +373,28 @@ public class ExcelData {
                 }else {
                     currentLevel = null;
                 }
-                compute.put(computeKey, computeNum + 1);
+                compute.put(computeKey + "" + unitElement, computeNum + 1);
             } else {
                 currentLevel = parentField.field.get(lastLevel);
+                if (currentLevel instanceof List) {
+                    Integer computeNum = compute.get(currentLevel + "" + unitElement);
+                    if(computeNum == null){
+                        computeNum = 0;
+                    }
+                    lastLevel = currentLevel;
+                    if(computeNum >= ((List)currentLevel).size()){
+                        ParameterizedType parameterizedType = (ParameterizedType)parentField.field.getGenericType();
+                        java.lang.reflect.Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                        if(ArrayUtil.isNotEmpty(actualTypeArguments)){
+                            java.lang.reflect.Type type = actualTypeArguments[0];
+                            currentLevel = Class.forName(type.getTypeName()).newInstance();
+                            ((List)lastLevel).add(currentLevel);
+                        }
+                    }else {
+                        currentLevel = ((List)currentLevel).get(computeNum);
+                    }
+                    compute.put(lastLevel + "" + unitElement, computeNum + 1);
+                }
             }
             if (currentLevel == null) {
                 if (!Object.class.equals(parentField.subclass)) {
@@ -394,28 +411,26 @@ public class ExcelData {
                         String typeName = fieldType.getTypeName();
                         Object newInstance = Class.forName(typeName).newInstance();
                         ((List) currentLevel).add(newInstance);
+                        compute.put(currentLevel + "" + unitElement, 1);
+                        parentField.field.set(lastLevel, currentLevel);
                         lastLevel = currentLevel;
                         currentLevel = newInstance;
                     }
-                } else {
+                }else{
                     currentLevel = parentField.field.getType().newInstance();
                 }
+            }else {
+                if(index == parents.size() - 1 && currentLevel instanceof List){
+                    Integer computeNum = compute.get(currentLevel + "" + unitElement);
+                    if(computeNum == null){
+                        computeNum = 0;
+                    }
+                    compute.put(currentLevel + "" + unitElement, computeNum + 1);
+                    currentLevel = ((List)currentLevel).get(computeNum);
+                }
             }
-            if (lastLevel instanceof List) {
-                ((List) lastLevel).add(currentLevel);
-            } else {
-                parentField.field.set(lastLevel, currentLevel);
-            }
-            if(index < parents.size() - 1){
-                lastLevel = currentLevel;
-                currentLevel = null;
-            }
+            lastLevel = currentLevel;
         }
-        if (lastLevel instanceof List) {
-            unitElement.field.set(currentLevel, value);
-            ((List) lastLevel).add(currentLevel);
-        } else {
-            unitElement.field.set(currentLevel, value);
-        }
+        unitElement.field.set(currentLevel, value);
     }
 }

@@ -27,7 +27,6 @@ public class CellUtil {
     public static void writeValue(Type type, XSSFCell cell, Object value){
         cell.setCellType(type.getType());
         if(value == null){
-            cell.setCellValue((String)null);
             return;
         }
         switch (type){
