@@ -1,13 +1,12 @@
 package org.lc.fe.util.excel;
 
-import com.alibaba.fastjson.JSON;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
 import org.lc.fe.constant.Type;
 import org.lc.fe.exception.ErrorInfo;
-import org.lc.fe.exception.FieldValueMappingException;
+import org.lc.fe.exception.XlsxParseException;
 import org.lc.fe.model.*;
 import org.lc.fe.util.ArrayUtil;
 import org.lc.fe.util.CollectionUtil;
@@ -21,7 +20,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -111,7 +109,7 @@ public class ExcelData {
         }
     }
 
-    public static void writeDataTask(List data, ClassAndTemplateInfo classAndTemplateInfo) throws FieldValueMappingException {
+    public static void writeDataTask(List data, ClassAndTemplateInfo classAndTemplateInfo) throws XlsxParseException {
         if(!CollectionUtil.isNotEmpty(data)){
             return;
         }
@@ -149,7 +147,7 @@ public class ExcelData {
             }
             while(true){
                 if(exc.get()){
-                    throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
+                    throw new XlsxParseException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
                 }
                 if(finished.intValue() == totalTask){
                     break;
@@ -159,7 +157,7 @@ public class ExcelData {
             try{
                 writeData(data, classAndTemplateInfo, classAndTemplateInfo.startRowNum);
             } catch (IllegalAccessException e) {
-                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
+                throw new XlsxParseException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
             }
         }
         classAndTemplateInfo.xssfSheet.removeRow(classAndTemplateInfo.xssfSheet.getRow(classAndTemplateInfo.baseRowNum));
@@ -308,7 +306,7 @@ public class ExcelData {
         return stringBuilder.toString();
     }
 
-    public static <T> ImportData<T> readData(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo) throws FieldValueMappingException {
+    public static <T> ImportData<T> readData(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo) throws XlsxParseException {
         ImportData<T> importData= new ImportData<>();
         int lastRowNum = classAndTemplateInfo.xssfSheet.getLastRowNum();
         if(lastRowNum <= classAndTemplateInfo.headerRowNum){
@@ -353,7 +351,7 @@ public class ExcelData {
                 }
             }catch (Exception e){
                 e.printStackTrace();
-                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg() + "\n" + e.getMessage());
+                throw new XlsxParseException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg() + "\n" + e.getMessage());
             }
         }
         return importData;

@@ -4,8 +4,8 @@ import org.lc.fe.ExcelPullTransfer;
 import org.lc.fe.annotation.ExcelFunction;
 import org.lc.fe.constant.AnnotationConstants;
 import org.lc.fe.exception.ErrorInfo;
+import org.lc.fe.exception.XlsxParseException;
 import org.lc.fe.model.*;
-import org.lc.fe.test.AValiade;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -14,7 +14,6 @@ import org.lc.fe.ExcelDataValidator;
 import org.lc.fe.annotation.ExcelColumn;
 import org.lc.fe.annotation.ExcelDynamicModel;
 import org.lc.fe.constant.Function;
-import org.lc.fe.exception.ColumnDuplicateException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -31,7 +30,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
         AnnotationAnalyseUtil.applicationContext = applicationContext;
     }
 
-    public static <T> void analyseAnnotation(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass, Class<? extends ExcelDataValidator>... excelDataValidatorClass) throws ColumnDuplicateException {
+    public static <T> void analyseAnnotation(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass, Class<? extends ExcelDataValidator>... excelDataValidatorClass) throws XlsxParseException {
         recursionAnalyseClass(clazz, classAndTemplateInfo, null, 0, dynamicColumn, excelPullTransferClass);
         if(ArrayUtil.isNotEmpty(excelDataValidatorClass)){
             for (int i = 0; i < excelDataValidatorClass.length; i++){
@@ -46,7 +45,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
         }
     }
 
-    private static int recursionAnalyseClass(Class clazz, ClassAndTemplateInfo classAndTemplateInfo, UnitElement unitElement, int level, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass) throws ColumnDuplicateException {
+    private static int recursionAnalyseClass(Class clazz, ClassAndTemplateInfo classAndTemplateInfo, UnitElement unitElement, int level, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass) throws XlsxParseException {
         List<Field> fields = getOwnExcelColumnFields(null, clazz);
         for (Field field: fields) {
             if(0 == level || unitElement == null){
@@ -135,9 +134,9 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
         return level;
     }
 
-    private static void putUnitElement(ClassAndTemplateInfo classAndTemplateInfo, String column, UnitElement unitElement) throws ColumnDuplicateException {
+    private static void putUnitElement(ClassAndTemplateInfo classAndTemplateInfo, String column, UnitElement unitElement) throws XlsxParseException {
         if(classAndTemplateInfo.unitElements.get(column) != null){
-            throw new ColumnDuplicateException(ErrorInfo.COLUMN_DUPLICATE.getMsg());
+            throw new XlsxParseException(ErrorInfo.COLUMN_DUPLICATE.getMsg());
         }
         classAndTemplateInfo.unitElements.put(column, unitElement);
     }

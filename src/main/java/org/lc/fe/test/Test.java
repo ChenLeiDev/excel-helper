@@ -1,9 +1,7 @@
 package org.lc.fe.test;
 
 import com.alibaba.fastjson.JSON;
-import org.apache.tomcat.util.http.fileupload.FileItem;
-import org.lc.fe.exception.ColumnDuplicateException;
-import org.lc.fe.exception.FieldValueMappingException;
+import org.lc.fe.exception.XlsxParseException;
 import org.lc.fe.model.DynamicColumn;
 import org.lc.fe.ExcelHelper;
 import org.lc.fe.model.ImportData;
@@ -12,32 +10,11 @@ import org.lc.fe.model.XlsxFile;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
-class Hello{
-    public static void main(String[] args) {
-        HashSet<Long> longs = new HashSet<>();
-        longs.add(1L);
-        longs.add(2L);
-        longs.add(3L);
-        Iterator<Long> iterator = longs.iterator();
-        while (iterator.hasNext()){
-            Long next = iterator.next();
-            System.out.println(next);
-        }
-        Iterator<Long> iterator2 = longs.iterator();
-        while (iterator2.hasNext()){
-            Long next = iterator2.next();
-            System.out.println(next);
-        }
-    }
-}
 public class Test {
-    public static void main(String[] args) throws IOException, ColumnDuplicateException, FieldValueMappingException {
+    public static void main(String[] args) throws IOException, XlsxParseException {
         List<A> list = new ArrayList<>();
         for (int i = 0; i < 10; i++){
             A a = new A();
@@ -112,7 +89,7 @@ public class Test {
         System.out.println("导出用时：" + (t2-t1));
         FileInputStream fileInputStream = new FileInputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
         long t3 = System.currentTimeMillis();
-        ImportData<A> importData = ExcelHelper.importXlsx(A.class, fileInputStream, dynamicColumn, AValiade.class);
+        ImportData<A> importData = ExcelHelper.importXlsx(A.class, fileInputStream, dynamicColumn);
         fileInputStream.close();
         long t4 = System.currentTimeMillis();
         System.out.println("导入用时：" + (t4-t3));
