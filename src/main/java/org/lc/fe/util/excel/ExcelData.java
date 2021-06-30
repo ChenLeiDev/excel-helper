@@ -79,24 +79,21 @@ public class ExcelData {
         }
     }
 
-    public static void setBaseRowStyle(int dataSize, ClassAndTemplateInfo classAndTemplateInfo) {
-        XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(classAndTemplateInfo.startRowNum);
-        if(row == null){
-            row = classAndTemplateInfo.xssfSheet.createRow(classAndTemplateInfo.startRowNum);
+    public static void setRowStyle(int dataSize, ClassAndTemplateInfo classAndTemplateInfo) {
+        classAndTemplateInfo.endRowNum = dataSize + classAndTemplateInfo.startRowNum;
+        XSSFRow baseRow = classAndTemplateInfo.xssfSheet.getRow(classAndTemplateInfo.startRowNum);
+        if(baseRow == null){
+            baseRow = classAndTemplateInfo.xssfSheet.createRow(classAndTemplateInfo.startRowNum);
         }
-        int baseRowNum = classAndTemplateInfo.startRowNum + dataSize;
-        classAndTemplateInfo.baseRowNum = baseRowNum;
-        classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.startRowNum, classAndTemplateInfo.startRowNum, baseRowNum, CELL_COPY_POLICY);
-        row = classAndTemplateInfo.xssfSheet.getRow(baseRowNum);
         XSSFDataFormat dataFormat = classAndTemplateInfo.xssfWorkbook.createDataFormat();
         for (int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
             if(StringUtil.isNotBlank(classAndTemplateInfo.headerCells[col])){
                 UnitElement unitElement = classAndTemplateInfo.unitElements.get(classAndTemplateInfo.headerCells[col]);
                 if(unitElement != null){
                     if(unitElement.format != null){
-                        XSSFCell cell = row.getCell(col);
+                        XSSFCell cell = baseRow.getCell(col);
                         if(cell == null){
-                            cell = row.createCell(col);
+                            cell = baseRow.createCell(col);
                         }
                         XSSFCellStyle cellStyle = cell.getCellStyle();
                         if(cellStyle == null){
@@ -107,14 +104,14 @@ public class ExcelData {
                 }
             }
         }
+        for(int i = classAndTemplateInfo.startRowNum + 1; i < classAndTemplateInfo.endRowNum; i++){
+            classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.startRowNum, classAndTemplateInfo.startRowNum, i, CELL_COPY_POLICY);
+        }
     }
 
     public static void writeDataTask(List data, ClassAndTemplateInfo classAndTemplateInfo) throws XlsxParseException {
         if(!CollectionUtil.isNotEmpty(data)){
             return;
-        }
-        for(int i = classAndTemplateInfo.baseRowNum - 1; i > classAndTemplateInfo.startRowNum; i--){
-            classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.baseRowNum, classAndTemplateInfo.baseRowNum, i, CELL_COPY_POLICY);
         }
         boolean runAsync = ExcelHelperConfiguration.getRunAsync();
         if(runAsync){
@@ -160,7 +157,6 @@ public class ExcelData {
                 throw new XlsxParseException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
             }
         }
-        classAndTemplateInfo.xssfSheet.removeRow(classAndTemplateInfo.xssfSheet.getRow(classAndTemplateInfo.baseRowNum));
         dealFunction(classAndTemplateInfo);
     }
 
@@ -168,7 +164,7 @@ public class ExcelData {
         if(classAndTemplateInfo.unitElements.get(UnitElement.HAS_FUNCTION) == null){//求底行和
             return;
         }
-        int endRowNum = classAndTemplateInfo.baseRowNum;
+        int endRowNum = classAndTemplateInfo.endRowNum;
         if(classAndTemplateInfo.startRowNum > endRowNum){
             endRowNum++;
         }
@@ -331,9 +327,7 @@ public class ExcelData {
                         type = Type.STRING;
                     }
                     Object value = CellUtil.readValue(type, cell, unitElement.field.getType());
-                    if(value != null){
-                        setFieldValue(unitElement, value, instance, compute);
-                    }
+                    setFieldValue(unitElement, value, instance, compute);
                 }
                 if(CollectionUtil.isNotEmpty(classAndTemplateInfo.validators)){
                     InvalidInfo invalidInfo = new InvalidInfo();
@@ -358,7 +352,7 @@ public class ExcelData {
     }
 
     private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        if(unitElement.parents.isEmpty()){
+        if(unitElement.parents.isEmpty() && value != null){
             unitElement.field.set(instance, value);
             return;
         }
@@ -374,7 +368,9 @@ public class ExcelData {
             currentLevel = getMultipleValue(unitElement.field + "" + lastLevel, lastLevel, parentField, compute);
             lastLevel = currentLevel;
         }
-        setValue(lastLevel, value, unitElement.field);
+        if(value != null){
+            setValue(lastLevel, value, unitElement.field);
+        }
     }
 
     private static Object getMultipleValue(Object computeKey, Object parent, ParentField childField, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {

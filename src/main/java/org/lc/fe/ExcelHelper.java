@@ -72,7 +72,7 @@ public class ExcelHelper {
         if(classAndTemplateInfo.pullNodes != null){
             ExcelData.setPulls(data == null ? 0 : data.size(), classAndTemplateInfo);
         }
-        ExcelData.setBaseRowStyle(data == null ? 0 : data.size(), classAndTemplateInfo);
+        ExcelData.setRowStyle(data == null ? 0 : data.size(), classAndTemplateInfo);
         try{
             ExcelData.writeDataTask(data, classAndTemplateInfo);
         }catch (XlsxParseException e) {

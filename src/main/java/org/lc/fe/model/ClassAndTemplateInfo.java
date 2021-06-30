@@ -29,7 +29,7 @@ public class ClassAndTemplateInfo {
 
     public String[] headerCells;
 
-    public int baseRowNum;
+    public int endRowNum;
 
     public XSSFDrawing drawingPatriarch;
 

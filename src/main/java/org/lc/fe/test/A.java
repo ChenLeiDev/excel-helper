@@ -12,7 +12,7 @@ import java.util.List;
 @ExcelModel(template = "模板", sheet = "数据列表", header = 3)
 public class A {
     @ExcelColumn(column = "编号")
-    @ExcelFunction(function = Function.COUNT)
+    @ExcelFunction(function = Function.COUNTA)
     private Long id;
     @ExcelColumn(column = "姓名")
     private String name;

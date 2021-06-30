@@ -94,10 +94,10 @@ public class Test {
         long t4 = System.currentTimeMillis();
         System.out.println("导入用时：" + (t4-t3));
         System.out.println(JSON.toJSONString(importData));
-        XlsxFile xlsxFile1 = ExcelHelper.exportXlsx(importData.getInvalid(), A.class, dynamicColumn);
-        FileOutputStream fileOutputStream1 = new FileOutputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
-        xlsxFile1.write(fileOutputStream1);
-        fileOutputStream1.close();
+//        XlsxFile xlsxFile1 = ExcelHelper.exportXlsx(importData.getInvalid(), A.class, dynamicColumn);
+//        FileOutputStream fileOutputStream1 = new FileOutputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
+//        xlsxFile1.write(fileOutputStream1);
+//        fileOutputStream1.close();
 
     }
 
