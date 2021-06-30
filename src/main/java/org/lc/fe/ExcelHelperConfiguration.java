@@ -10,7 +10,7 @@ public abstract class ExcelHelperConfiguration implements ApplicationContextAwar
 
 
     private static ThreadPoolExecutor ASYNC_TASK_POOL = null;
-    private static int DEFAULT_PAGE_LIMIT = 1000;
+    private static int DEFAULT_PAGE_LIMIT = 10000;
     private static String LOCAL_TEMPLATE_FILE_PATH = "C:\\Users\\ChenLei\\Desktop\\";
     private static String TEMPLATE_FILE_PATH = "static/template/";
 

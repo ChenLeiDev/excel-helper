@@ -16,7 +16,7 @@ import java.util.List;
 public class Test {
     public static void main(String[] args) throws IOException, XlsxParseException {
         List<A> list = new ArrayList<>();
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 10000; i++){
             A a = new A();
             a.setId(i*1000000000L);
             a.setName("好家伙" + i);
@@ -87,13 +87,13 @@ public class Test {
         xlsxFile.write(fileOutputStream);
         fileOutputStream.close();
         System.out.println("导出用时：" + (t2-t1));
-        FileInputStream fileInputStream = new FileInputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
-        long t3 = System.currentTimeMillis();
-        ImportData<A> importData = ExcelHelper.importXlsx(A.class, fileInputStream, dynamicColumn);
-        fileInputStream.close();
-        long t4 = System.currentTimeMillis();
-        System.out.println("导入用时：" + (t4-t3));
-        System.out.println(JSON.toJSONString(importData));
+//        FileInputStream fileInputStream = new FileInputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
+//        long t3 = System.currentTimeMillis();
+//        ImportData<A> importData = ExcelHelper.importXlsx(A.class, fileInputStream, dynamicColumn);
+//        fileInputStream.close();
+//        long t4 = System.currentTimeMillis();
+//        System.out.println("导入用时：" + (t4-t3));
+//        System.out.println(JSON.toJSONString(importData));
 //        XlsxFile xlsxFile1 = ExcelHelper.exportXlsx(importData.getInvalid(), A.class, dynamicColumn);
 //        FileOutputStream fileOutputStream1 = new FileOutputStream("C:\\Users\\ChenLei\\Desktop\\导出.xlsx");
 //        xlsxFile1.write(fileOutputStream1);
