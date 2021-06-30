@@ -16,7 +16,7 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.util.List;
 
-public class ExcelHelper<T> {
+public class ExcelHelper {
 
     public static final String XLSX_FILE_SUFFIX = ".xlsx";
     private static final String CONTENT_TYPE = "application/vnd.ms-excel;charset=utf-8";

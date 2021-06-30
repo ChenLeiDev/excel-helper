@@ -10,6 +10,9 @@ public class B {
     @ExcelColumn(column = "爱好")
     private String hobby;
 
+    @ExcelColumn(column = "爱好id")
+    private Long id;
+
 
 
     @ExcelDynamicModel(subclass = ArrayList.class)
@@ -29,4 +32,11 @@ public class B {
         this.hobby = hobby;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

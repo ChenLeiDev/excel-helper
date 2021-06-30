@@ -16,11 +16,14 @@ import org.lc.fe.ExcelDataValidator;
 import org.lc.fe.ExcelHelper;
 import org.lc.fe.ExcelHelperConfiguration;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +32,8 @@ public class ExcelData {
     private static final CellCopyPolicy CELL_COPY_POLICY = new CellCopyPolicy();
 
     private ExcelData(){}
+
+    private static final Map<String, Class> CLASS_FOR_NAME = new ConcurrentHashMap<>();
 
     public static void setPulls(int dataSize, ClassAndTemplateInfo classAndTemplateInfo){
         int endRow = dataSize + classAndTemplateInfo.startRowNum;//无数据则填充预留的一行
@@ -109,6 +114,9 @@ public class ExcelData {
     public static void writeDataTask(List data, ClassAndTemplateInfo classAndTemplateInfo) throws FieldValueMappingException {
         if(!CollectionUtil.isNotEmpty(data)){
             return;
+        }
+        for(int i = classAndTemplateInfo.baseRowNum - 1; i > classAndTemplateInfo.startRowNum; i--){
+            classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.baseRowNum, classAndTemplateInfo.baseRowNum, i, CELL_COPY_POLICY);
         }
         boolean runAsync = ExcelHelperConfiguration.getRunAsync();
         if(runAsync){
@@ -215,7 +223,6 @@ public class ExcelData {
                 startRow++;
                 continue;
             }
-            classAndTemplateInfo.xssfSheet.copyRows(classAndTemplateInfo.baseRowNum, classAndTemplateInfo.baseRowNum, startRow, CELL_COPY_POLICY);
             XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
             Map<Object, Integer> compute = new HashMap<>(0);
             for(int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
@@ -233,7 +240,7 @@ public class ExcelData {
                 }
                 Object value = null;
                 if(dataElement.getClass().equals(DataNode.class)){
-                    value = unitElement.field.get(((DataNode)dataElement).getData());
+                    value = getFieldValue(unitElement, ((DataNode)dataElement).getData(), compute, headerCell);
                     String comment = ((DataNode)dataElement).getInvalidInfo().getInvalid(unitElement.field.getName());
                     if(comment != null){
                         XSSFComment cellComment = classAndTemplateInfo.drawingPatriarch.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, (short) 3, 3, (short) 5, 6));
@@ -346,91 +353,85 @@ public class ExcelData {
                 }
             }catch (Exception e){
                 e.printStackTrace();
-                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
+                throw new FieldValueMappingException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg() + "\n" + e.getMessage());
             }
         }
         return importData;
     }
 
     private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        List<ParentField> parents = unitElement.parents;
-        if(parents.isEmpty()){
+        if(unitElement.parents.isEmpty()){
             unitElement.field.set(instance, value);
             return;
         }
+        setMultipleFieldValue(unitElement, value, instance, compute);
+    }
+
+    private static <T> void setMultipleFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+        List<ParentField> parents = unitElement.parents;
         Object lastLevel = instance;
-        Object currentLevel = instance;
+        Object currentLevel = null;
         for (int index = 0; index < parents.size(); index++) {
             ParentField parentField = parents.get(index);
-            Object computeKey = lastLevel;
-            if (lastLevel instanceof List) {
-                Integer computeNum = compute.get(computeKey + "" + unitElement);
-                if(computeNum == null){
-                    computeNum = 0;
-                }
-                if(computeNum < ((List) lastLevel).size()){
-                    currentLevel = ((List) lastLevel).get(computeNum);
-                }else {
-                    currentLevel = null;
-                }
-                compute.put(computeKey + "" + unitElement, computeNum + 1);
-            } else {
-                currentLevel = parentField.field.get(lastLevel);
-                if (currentLevel instanceof List) {
-                    Integer computeNum = compute.get(currentLevel + "" + unitElement);
-                    if(computeNum == null){
-                        computeNum = 0;
-                    }
-                    lastLevel = currentLevel;
-                    if(computeNum >= ((List)currentLevel).size()){
-                        ParameterizedType parameterizedType = (ParameterizedType)parentField.field.getGenericType();
-                        java.lang.reflect.Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                        if(ArrayUtil.isNotEmpty(actualTypeArguments)){
-                            java.lang.reflect.Type type = actualTypeArguments[0];
-                            currentLevel = Class.forName(type.getTypeName()).newInstance();
-                            ((List)lastLevel).add(currentLevel);
-                        }
-                    }else {
-                        currentLevel = ((List)currentLevel).get(computeNum);
-                    }
-                    compute.put(lastLevel + "" + unitElement, computeNum + 1);
-                }
-            }
-            if (currentLevel == null) {
-                if (!Object.class.equals(parentField.subclass)) {
-                    currentLevel = parentField.subclass.newInstance();
-                    if(currentLevel instanceof List){
-                        java.lang.reflect.Type fieldType = parentField.field.getGenericType();
-                        if(fieldType instanceof ParameterizedType){
-                            ParameterizedType parameterizedType = (ParameterizedType)fieldType;
-                            java.lang.reflect.Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                            if(ArrayUtil.isNotEmpty(actualTypeArguments)){
-                                fieldType = actualTypeArguments[0];
-                            }
-                        }
-                        String typeName = fieldType.getTypeName();
-                        Object newInstance = Class.forName(typeName).newInstance();
-                        ((List) currentLevel).add(newInstance);
-                        compute.put(currentLevel + "" + unitElement, 1);
-                        parentField.field.set(lastLevel, currentLevel);
-                        lastLevel = currentLevel;
-                        currentLevel = newInstance;
-                    }
-                }else{
-                    currentLevel = parentField.field.getType().newInstance();
-                }
-            }else {
-                if(index == parents.size() - 1 && currentLevel instanceof List){
-                    Integer computeNum = compute.get(currentLevel + "" + unitElement);
-                    if(computeNum == null){
-                        computeNum = 0;
-                    }
-                    compute.put(currentLevel + "" + unitElement, computeNum + 1);
-                    currentLevel = ((List)currentLevel).get(computeNum);
-                }
-            }
+            currentLevel = getMultipleValue(unitElement.field + "" + lastLevel, lastLevel, parentField, compute);
             lastLevel = currentLevel;
         }
-        unitElement.field.set(currentLevel, value);
+        setValue(lastLevel, value, unitElement.field);
+    }
+
+    private static Object getMultipleValue(Object computeKey, Object parent, ParentField childField, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+        Object fieldValue = childField.field.get(parent);
+        if(fieldValue == null){
+            Object obj = createObj(childField, false);
+            childField.field.set(parent, obj);
+            fieldValue = obj;
+        }
+        if(fieldValue instanceof List){
+            Integer computeNum = compute.get(computeKey);
+            if(computeNum == null){
+                computeNum = 0;
+            }
+            compute.put(computeKey, computeNum + 1);
+            if(computeNum < ((List)fieldValue).size()){
+                return ((List)fieldValue).get(computeNum);
+            }else{
+                Object obj = createObj(childField, true);
+                ((List)fieldValue).add(obj);
+                return obj;
+            }
+        }
+        return fieldValue;
+    }
+
+    private static void setValue(Object parent, Object value, Field parentField) throws IllegalAccessException {
+        if(parent instanceof List){
+            ((List)parent).add(value);
+        }
+        parentField.set(parent, value);
+    }
+
+    private static Object createObj(ParentField field, boolean genericType) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        if(genericType){
+            String typeName = null;
+            java.lang.reflect.Type type = field.field.getGenericType();
+            if (type instanceof ParameterizedType) {
+                java.lang.reflect.Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+                if(!ArrayUtil.isNotEmpty(actualTypeArguments)){
+                    throw new RuntimeException(ErrorInfo.FIELD_GENERIC_TYPE_MISSING.getMsg());
+                }
+                typeName = ((ParameterizedType)type).getActualTypeArguments()[0].getTypeName();
+            }
+            Class classForName = CLASS_FOR_NAME.get(typeName);
+            if(classForName == null){
+                classForName = Class.forName(typeName);
+                CLASS_FOR_NAME.put(typeName, classForName);
+            }
+            return classForName.newInstance();
+        }
+        Class subclass = field.subclass;
+        if(!Object.class.equals(subclass)){
+            return subclass.newInstance();
+        }
+        return field.field.getType().newInstance();
     }
 }

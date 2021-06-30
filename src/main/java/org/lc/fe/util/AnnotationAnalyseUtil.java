@@ -5,6 +5,7 @@ import org.lc.fe.annotation.ExcelFunction;
 import org.lc.fe.constant.AnnotationConstants;
 import org.lc.fe.exception.ErrorInfo;
 import org.lc.fe.model.*;
+import org.lc.fe.test.AValiade;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -136,7 +137,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
 
     private static void putUnitElement(ClassAndTemplateInfo classAndTemplateInfo, String column, UnitElement unitElement) throws ColumnDuplicateException {
         if(classAndTemplateInfo.unitElements.get(column) != null){
-            throw new ColumnDuplicateException(ErrorInfo.COLUMN_DUPLICATE_ERROR.getMsg());
+            throw new ColumnDuplicateException(ErrorInfo.COLUMN_DUPLICATE.getMsg());
         }
         classAndTemplateInfo.unitElements.put(column, unitElement);
     }
