@@ -7,7 +7,7 @@ public class DataNode<T> {
     private InvalidInfo invalidInfo;
     private T data;
 
-    protected DataNode(InvalidInfo invalidInfo, T data) {
+    public DataNode(InvalidInfo invalidInfo, T data) {
         this.invalidInfo = invalidInfo;
         this.data = data;
     }
