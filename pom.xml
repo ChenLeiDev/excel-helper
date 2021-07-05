@@ -6,11 +6,12 @@
 
     <groupId>org.lc</groupId>
     <artifactId>excel-helper</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <properties>
         <!-- The main class to start by executing java -jar -->
-        <org.springframework.version>5.3.8</org.springframework.version>
+        <spring.version>5.3.8</spring.version>
+        <springboot.config.version>2.5.2</springboot.config.version>
         <javax.servlet.version>4.0.1</javax.servlet.version>
         <poi.version>4.1.2</poi.version>
         <commons-fileupload.version>1.4</commons-fileupload.version>
@@ -23,14 +24,14 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${spring.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${spring.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -80,15 +81,36 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
-            <version>2.5.2</version>
+            <version>${springboot.config.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>2.5.2</version>
+            <version>${springboot.config.version}</version>
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>maven-public</id>
+            <url>http://172.16.3.3:8081/nexus/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>maven-releases</id>
+            <name>Release Repository</name>
+            <url>http://172.16.3.3:8081/nexus/repository/maven-releases/</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>maven-snapshots</id>
+            <name>Snapshot Repository</name>
+            <url>http://172.16.3.3:8081/nexus/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>

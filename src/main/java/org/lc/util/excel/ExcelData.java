@@ -6,7 +6,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
 import org.lc.ExcelDataValidator;
 import org.lc.ExcelHelper;
-import org.lc.ExcelHelperConfiguration;
+import org.lc.config.ExcelHelperAutoConfiguration;
 import org.lc.constant.Type;
 import org.lc.exception.ErrorInfo;
 import org.lc.exception.XlsxParseException;
@@ -20,8 +20,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -113,21 +112,28 @@ public class ExcelData {
         if(!CollectionUtil.isNotEmpty(data)){
             return;
         }
-        boolean runAsync = ExcelHelperConfiguration.getRunAsync();
+        boolean runAsync = ExcelHelperAutoConfiguration.getMultiThread();
         if(runAsync){
-            int pageLimit = ExcelHelperConfiguration.getPageLimit();
+            int pageLimit = ExcelHelperAutoConfiguration.getPageLimit();
             AtomicInteger finished = new AtomicInteger(0);
             int totalTask = data.size() / pageLimit;
             if(data.size() % pageLimit > 0){
                 totalTask++;
             }
             AtomicBoolean exc = new AtomicBoolean(false);
+            ThreadPoolExecutor asyncPool = new ThreadPoolExecutor(
+                    ExcelHelperAutoConfiguration.getMultiThreadNum(),
+                    ExcelHelperAutoConfiguration.getMultiThreadNum(),
+                    1, TimeUnit.MINUTES,
+                    new LinkedBlockingQueue<>()
+            );
             for (int step = 0; ; step += pageLimit){
                 int localStart = step;
                 int localEnd = step + pageLimit < data.size() ? step + pageLimit : data.size();
                 if(localStart < localEnd){
                     List subList = data.subList(localStart, localEnd);
                     CompletableFuture.runAsync(()->{
+                        System.out.println(Thread.currentThread().getName().concat("导出任务开始"));
                         try {
                             writeData(subList, classAndTemplateInfo, classAndTemplateInfo.startRowNum + localStart);
                         } catch (IllegalAccessException e) {
@@ -136,17 +142,20 @@ public class ExcelData {
                             e.printStackTrace();
                         } finally {
                             finished.incrementAndGet();
+                            System.out.println(Thread.currentThread().getName().concat("导出任务完成"));
                         }
-                    }, ExcelHelperConfiguration.getAsyncTaskPool());
+                    }, asyncPool);
                 }else{
                     break;
                 }
             }
             while(true){
                 if(exc.get()){
+                    asyncPool.shutdownNow();
                     throw new XlsxParseException(ErrorInfo.FIELD_VALUE_MAPPING_ERROR.getMsg());
                 }
                 if(finished.intValue() == totalTask){
+                    asyncPool.shutdown();
                     break;
                 }
             }
@@ -308,7 +317,7 @@ public class ExcelData {
         if(lastRowNum <= classAndTemplateInfo.headerRowNum){
             return importData;
         }
-        for (int startRow = classAndTemplateInfo.startRowNum; startRow < lastRowNum; startRow++){
+        for (int startRow = classAndTemplateInfo.startRowNum; startRow <= lastRowNum; startRow++){
             XSSFRow row = classAndTemplateInfo.xssfSheet.getRow(startRow);
             if(row == null){
                 continue;

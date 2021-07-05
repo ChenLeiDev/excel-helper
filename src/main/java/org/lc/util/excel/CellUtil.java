@@ -49,6 +49,9 @@ public class CellUtil {
     }
 
     public static Object readValue(Type type, XSSFCell cell, Class valueType){
+        if(cell == null){
+            return null;
+        }
         CellType cellType = cell.getCellTypeEnum();
         if(!cellType.equals(type.getType())){
             return null;

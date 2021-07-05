@@ -5,7 +5,7 @@ import org.lc.ExcelPullTransfer;
 import org.lc.annotation.ExcelColumn;
 import org.lc.annotation.ExcelDynamicModel;
 import org.lc.annotation.ExcelFunction;
-import org.lc.ApplicationExcelHelperAutoConfig;
+import org.lc.config.ExcelHelperAutoConfiguration;
 import org.lc.constant.AnnotationConstants;
 import org.lc.constant.Function;
 import org.lc.exception.ErrorInfo;
@@ -30,7 +30,7 @@ public class AnnotationAnalyseUtil{
                     if(classAndTemplateInfo.validators == null){
                         classAndTemplateInfo.validators = new ArrayList<>();
                     }
-                    ExcelDataValidator bean = ApplicationExcelHelperAutoConfig.getApplicationContext().getBean(excelDataValidatorClass[i]);
+                    ExcelDataValidator bean = ExcelHelperAutoConfiguration.getApplicationContext().getBean(excelDataValidatorClass[i]);
                     classAndTemplateInfo.validators.add(bean);
                 }
             }
@@ -82,7 +82,7 @@ public class AnnotationAnalyseUtil{
                 String pullsFlag = excelColumn.pulls();
                 if(excelPullTransferClass != null){
                     if(!AnnotationConstants.DEFAULT_PULLS_FLAG.equals(pullsFlag)){//获取下拉框
-                        ExcelPullTransfer excelPullTransfer = ApplicationExcelHelperAutoConfig.getApplicationContext().getBean(excelPullTransferClass);
+                        ExcelPullTransfer excelPullTransfer = ExcelHelperAutoConfiguration.getApplicationContext().getBean(excelPullTransferClass);
                         if(excelPullTransfer != null){
                             if(classAndTemplateInfo.pullNodes == null){
                                 classAndTemplateInfo.pullNodes = new PullNodes();

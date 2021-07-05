@@ -7,8 +7,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.tomcat.util.http.fileupload.FileItem;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.lc.ExcelHelper;
-import org.lc.ExcelHelperConfiguration;
 import org.lc.annotation.ExcelModel;
+import org.lc.config.ExcelHelperAutoConfiguration;
 import org.lc.constant.AnnotationConstants;
 import org.lc.model.ClassAndTemplateInfo;
 import org.lc.model.DynamicColumn;
@@ -138,7 +138,7 @@ public class TemplateAnalyseUtil {
     }
 
     public static FileItem getTemplateFielFromFile(String name){
-        File template = new File(ExcelHelperConfiguration.getLocalTemplateFilePath().concat(name));
+        File template = new File(ExcelHelperAutoConfiguration.getTemplatePath());
         if(!template.exists()){
             return null;
         }
@@ -176,7 +176,7 @@ public class TemplateAnalyseUtil {
     }
 
     public static FileItem getTemplateFielFromJar(String name){
-        ClassPathResource classPathResource = new ClassPathResource(ExcelHelperConfiguration.getTemplateFilePath().concat(name));
+        ClassPathResource classPathResource = new ClassPathResource(ExcelHelperAutoConfiguration.getTemplatePath().concat(name));
         FileItem temp = null;
         InputStream templateInput = null;
         OutputStream tempOutput = null;

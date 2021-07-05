@@ -1,0 +1,20 @@
+{
+  "properties": [
+    {
+      "name": "excel-helper.multi-thread",
+      "description": "启用多线程模式."
+    },
+    {
+      "name": "excel-helper.page-limit",
+      "description": "多线程模式下分数条数."
+    },
+    {
+      "name": "excel-helper.multi-thread-num",
+      "description": "多线程模式线程数."
+    },
+    {
+      "name": "excel-helper.template-path",
+      "description": "模板目录."
+    }
+  ]
+}
