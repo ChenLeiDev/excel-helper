@@ -5,14 +5,12 @@ import org.lc.ExcelPullTransfer;
 import org.lc.annotation.ExcelColumn;
 import org.lc.annotation.ExcelDynamicModel;
 import org.lc.annotation.ExcelFunction;
+import org.lc.ApplicationExcelHelperAutoConfig;
 import org.lc.constant.AnnotationConstants;
 import org.lc.constant.Function;
 import org.lc.exception.ErrorInfo;
 import org.lc.exception.XlsxParseException;
 import org.lc.model.*;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
@@ -22,14 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class AnnotationAnalyseUtil implements ApplicationContextAware {
-
-    private static ApplicationContext applicationContext = null;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        AnnotationAnalyseUtil.applicationContext = applicationContext;
-    }
+public class AnnotationAnalyseUtil{
 
     public static <T> void analyseAnnotation(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, Class<? extends ExcelPullTransfer> excelPullTransferClass, Class<? extends ExcelDataValidator>... excelDataValidatorClass) throws XlsxParseException {
         recursionAnalyseClass(clazz, classAndTemplateInfo, null, 0, dynamicColumn, excelPullTransferClass);
@@ -39,7 +30,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
                     if(classAndTemplateInfo.validators == null){
                         classAndTemplateInfo.validators = new ArrayList<>();
                     }
-                    ExcelDataValidator bean = applicationContext.getBean(excelDataValidatorClass[i]);
+                    ExcelDataValidator bean = ApplicationExcelHelperAutoConfig.getApplicationContext().getBean(excelDataValidatorClass[i]);
                     classAndTemplateInfo.validators.add(bean);
                 }
             }
@@ -91,7 +82,7 @@ public class AnnotationAnalyseUtil implements ApplicationContextAware {
                 String pullsFlag = excelColumn.pulls();
                 if(excelPullTransferClass != null){
                     if(!AnnotationConstants.DEFAULT_PULLS_FLAG.equals(pullsFlag)){//获取下拉框
-                        ExcelPullTransfer excelPullTransfer = applicationContext.getBean(excelPullTransferClass);
+                        ExcelPullTransfer excelPullTransfer = ApplicationExcelHelperAutoConfig.getApplicationContext().getBean(excelPullTransferClass);
                         if(excelPullTransfer != null){
                             if(classAndTemplateInfo.pullNodes == null){
                                 classAndTemplateInfo.pullNodes = new PullNodes();
