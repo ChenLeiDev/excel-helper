@@ -49,7 +49,7 @@ public class CellUtil {
     }
 
     public static Object readValue(Type type, XSSFCell cell, Class valueType){
-        CellType cellType = cell.getCellType();
+        CellType cellType = cell.getCellTypeEnum();
         if(!cellType.equals(type.getType())){
             return null;
         }

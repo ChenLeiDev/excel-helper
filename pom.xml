@@ -12,7 +12,6 @@
         <!-- The main class to start by executing java -jar -->
         <org.springframework.version>5.3.8</org.springframework.version>
         <javax.servlet.version>4.0.1</javax.servlet.version>
-        <java.version>1.8</java.version>
         <poi.version>4.1.2</poi.version>
         <commons-fileupload.version>1.4</commons-fileupload.version>
         <tomcat-coyote.version>10.0.6</tomcat-coyote.version>
