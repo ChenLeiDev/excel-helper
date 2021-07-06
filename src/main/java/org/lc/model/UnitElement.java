@@ -5,7 +5,9 @@ import org.lc.constant.Type;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class UnitElement {
     public static final String HAS_FUNCTION = "HAS_FUNCTION";

@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.lc.constant.Type;
+import org.lc.model.PullNodes;
+import org.lc.util.ArrayUtil;
 
 import java.util.Date;
 
@@ -48,7 +50,7 @@ public class CellUtil {
         }
     }
 
-    public static Object readValue(Type type, XSSFCell cell, Class valueType){
+    public static Object readValue(Type type, XSSFCell cell, Class valueType, PullNodes pullNodes, boolean transfer, String pullsFlag){
         if(cell == null){
             return null;
         }
@@ -82,6 +84,9 @@ public class CellUtil {
                     return value;
                 }
                 break;
+        }
+        if(transfer){
+            value = pullNodes.getInValue(pullsFlag, value);
         }
         if(value == null){
             return null;

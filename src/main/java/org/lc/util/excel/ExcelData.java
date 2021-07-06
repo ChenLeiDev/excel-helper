@@ -11,15 +11,14 @@ import org.lc.constant.Type;
 import org.lc.exception.ErrorInfo;
 import org.lc.exception.XlsxParseException;
 import org.lc.model.*;
+import org.lc.util.ArrayMap;
 import org.lc.util.ArrayUtil;
 import org.lc.util.CollectionUtil;
 import org.lc.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -322,7 +321,8 @@ public class ExcelData {
             if(row == null){
                 continue;
             }
-            Map<Object, Integer> compute = new HashMap<>();
+            Map<String, Integer> compute = new HashMap<>();
+            Map<Object, String> uniqueSign = new ArrayMap<>();
             try{
                 T instance = clazz.newInstance();
                 for (int col = 0; col < classAndTemplateInfo.headerCells.length; col++){
@@ -332,11 +332,13 @@ public class ExcelData {
                     }
                     XSSFCell cell = row.getCell(col);
                     Type type = unitElement.type;
+                    boolean transfer = false;
                     if(unitElement.pulls != null){
                         type = Type.STRING;
+                        transfer = true;
                     }
-                    Object value = CellUtil.readValue(type, cell, unitElement.field.getType());
-                    setFieldValue(unitElement, value, instance, compute);
+                    Object value = CellUtil.readValue(type, cell, unitElement.field.getType(), classAndTemplateInfo.pullNodes, transfer, unitElement.pullsFlag);
+                    setFieldValue(unitElement, value, instance, compute, uniqueSign);
                 }
                 if(CollectionUtil.isNotEmpty(classAndTemplateInfo.validators)){
                     InvalidInfo invalidInfo = new InvalidInfo();
@@ -360,29 +362,45 @@ public class ExcelData {
         return importData;
     }
 
-    private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    private static <T> void setFieldValue(UnitElement unitElement, Object value, T instance, Map<String, Integer> compute, Map<Object, String> uniqueSign) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
         if(unitElement.parents.isEmpty() && value != null){
             unitElement.field.set(instance, value);
             return;
         }
-        setMultipleFieldValue(unitElement, value, instance, compute);
+        setMultipleFieldValue(unitElement, value, instance, compute, uniqueSign);
     }
 
-    private static <T> void setMultipleFieldValue(UnitElement unitElement, Object value, T instance, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    private static <T> void setMultipleFieldValue(UnitElement unitElement, Object value, T instance, Map<String, Integer> compute, Map<Object, String> uniqueSign) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
         List<ParentField> parents = unitElement.parents;
         Object lastLevel = instance;
         Object currentLevel = null;
         for (int index = 0; index < parents.size(); index++) {
             ParentField parentField = parents.get(index);
-            currentLevel = getMultipleValue(unitElement.field + "" + lastLevel, lastLevel, parentField, compute);
+            String sign1 = uniqueSign.get(unitElement.field);
+            if(sign1 == null){
+                sign1 = String.valueOf(UUID.randomUUID());
+                uniqueSign.put(unitElement.field, sign1);
+            }
+            String sign2 = uniqueSign.get(lastLevel);
+            if(sign2 == null){
+                sign2 = String.valueOf(UUID.randomUUID());
+                uniqueSign.put(lastLevel, sign2);
+            }
+            currentLevel = getMultipleValue(sign1 + sign2, lastLevel, parentField, compute);
             lastLevel = currentLevel;
         }
-        if(value != null){
+        if(value == null){
+            return;
+        }
+        if(lastLevel instanceof List){
+            List list = (List)lastLevel;
+            setValue(list.get(list.size() - 1), value, unitElement.field);
+        }else{
             setValue(lastLevel, value, unitElement.field);
         }
     }
 
-    private static Object getMultipleValue(Object computeKey, Object parent, ParentField childField, Map<Object, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    private static Object getMultipleValue(String computeKey, Object parent, ParentField childField, Map<String, Integer> compute) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
         Object fieldValue = childField.field.get(parent);
         if(fieldValue == null){
             Object obj = createObj(childField, false);
@@ -396,11 +414,9 @@ public class ExcelData {
             }
             compute.put(computeKey, computeNum + 1);
             if(computeNum < ((List)fieldValue).size()){
-                return ((List)fieldValue).get(computeNum);
             }else{
                 Object obj = createObj(childField, true);
                 ((List)fieldValue).add(obj);
-                return obj;
             }
         }
         return fieldValue;
