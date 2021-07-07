@@ -6,7 +6,7 @@
 
     <groupId>org.lc</groupId>
     <artifactId>excel-helper</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 
     <properties>
         <!-- The main class to start by executing java -jar -->
