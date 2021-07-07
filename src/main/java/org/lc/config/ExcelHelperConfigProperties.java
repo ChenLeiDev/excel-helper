@@ -5,6 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "excel-helper")
 public class ExcelHelperConfigProperties {
 
+    private String formFieldName;
+
     private Boolean multiThread;
 
     private Integer multiThreadNum;
@@ -43,5 +45,13 @@ public class ExcelHelperConfigProperties {
 
     public void setMultiThread(Boolean multiThread) {
         this.multiThread = multiThread;
+    }
+
+    public String getFormFieldName() {
+        return formFieldName;
+    }
+
+    public void setFormFieldName(String formFieldName) {
+        this.formFieldName = formFieldName;
     }
 }

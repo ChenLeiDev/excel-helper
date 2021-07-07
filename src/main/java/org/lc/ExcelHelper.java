@@ -21,8 +21,8 @@ import java.util.List;
 public class ExcelHelper {
 
     public static final String XLSX_FILE_SUFFIX = ".xlsx";
-    private static final String CONTENT_TYPE = "application/vnd.ms-excel;charset=utf-8";
-    private static final String CHARSET = "UTF-8";
+    public static final String CONTENT_TYPE = "application/vnd.ms-excel;charset=utf-8";
+    public static final String CHARSET = "UTF-8";
     private static final String HEADER_KEY = "Content-Disposition";
     private static final String HEADER_VALUE = "attachment;filename=";
     public static final String HIDDEN_PULLS_SHEET_PREFIX = "HIDDEN_PULLS_SHEET_";
@@ -87,7 +87,7 @@ public class ExcelHelper {
             throw e;
         }
         classAndTemplateInfo.xssfWorkbook.setForceFormulaRecalculation(true);// 执行公式
-        FileItem fileItem = TemplateAnalyseUtil.createFileItem(classAndTemplateInfo.templateName);
+        FileItem fileItem = TemplateAnalyseUtil.createFileItem();
         OutputStream outputStream = null;
         boolean exc = false;
         try{

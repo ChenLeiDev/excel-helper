@@ -1,19 +1,23 @@
 {
   "properties": [
     {
-      "name": "excel-helper.multi-thread",
+      "name": "excel-helper.formFieldName",
+      "description": "fileItem作为field的名字"
+    },
+    {
+      "name": "excel-helper.multiThread",
       "description": "启用多线程模式."
     },
     {
-      "name": "excel-helper.page-limit",
+      "name": "excel-helper.pageLimit",
       "description": "多线程模式下分数条数."
     },
     {
-      "name": "excel-helper.multi-thread-num",
+      "name": "excel-helper.multiThreadNum",
       "description": "多线程模式线程数."
     },
     {
-      "name": "excel-helper.template-path",
+      "name": "excel-helper.templatePath",
       "description": "模板目录."
     }
   ]

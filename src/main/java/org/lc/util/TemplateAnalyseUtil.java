@@ -10,6 +10,8 @@ import org.lc.ExcelHelper;
 import org.lc.annotation.ExcelModel;
 import org.lc.config.ExcelHelperAutoConfiguration;
 import org.lc.constant.AnnotationConstants;
+import org.lc.exception.ErrorInfo;
+import org.lc.exception.XlsxParseException;
 import org.lc.model.ClassAndTemplateInfo;
 import org.lc.model.DynamicColumn;
 import org.lc.util.excel.RowUtil;
@@ -25,12 +27,15 @@ public class TemplateAnalyseUtil {
 
     private TemplateAnalyseUtil(){}
 
-    public static <T> void analyseTemplate(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, InputStream inputStream){
+    public static <T> void analyseTemplate(Class<T> clazz, ClassAndTemplateInfo classAndTemplateInfo, DynamicColumn dynamicColumn, InputStream inputStream) throws XlsxParseException {
         ExcelModel excelModel = clazz.getDeclaredAnnotation(ExcelModel.class);
         String templateFileName = excelModel.template();
         templateFileName = TemplateAnalyseUtil.buildName(templateFileName);
         classAndTemplateInfo.templateName = templateFileName;
         FileItem templateFile = TemplateAnalyseUtil.getTemplateFile(templateFileName, inputStream);
+        if(templateFile == null){
+            throw new XlsxParseException(ErrorInfo.TEMPLATE_FILE_NOT_FOUND.getMsg());
+        }
         int headerRowNum = excelModel.header();
         classAndTemplateInfo.headerRowNum = headerRowNum;
         int startRowNum = excelModel.start();
@@ -101,14 +106,14 @@ public class TemplateAnalyseUtil {
         if (startupFromFile) {
             return getTemplateFielFromFile(name);
         }
-        return createFileItem(name);
+        return null;
     }
 
     public static FileItem getTemplateFileFromStream(String name, InputStream templateInput){
         FileItem temp = null;
         OutputStream tempOutput = null;
         try{
-            temp = createFileItem(name);
+            temp = createFileItem();
             tempOutput = temp.getOutputStream();
             byte[] buffer = new byte[1024];
             while (templateInput.read(buffer) > -1) {
@@ -138,11 +143,11 @@ public class TemplateAnalyseUtil {
     }
 
     public static FileItem getTemplateFielFromFile(String name){
-        File template = new File(ExcelHelperAutoConfiguration.getTemplatePath());
+        File template = new File(ExcelHelperAutoConfiguration.getTemplatePath().concat(name));
         if(!template.exists()){
             return null;
         }
-        FileItem temp = createFileItem(name);
+        FileItem temp = createFileItem();
         InputStream templateInput = null;
         OutputStream tempOutput = null;
         try{
@@ -177,12 +182,15 @@ public class TemplateAnalyseUtil {
 
     public static FileItem getTemplateFielFromJar(String name){
         ClassPathResource classPathResource = new ClassPathResource(ExcelHelperAutoConfiguration.getTemplatePath().concat(name));
+        if(!classPathResource.exists()){
+            return null;
+        }
         FileItem temp = null;
         InputStream templateInput = null;
         OutputStream tempOutput = null;
         try{
             templateInput = classPathResource.getInputStream();
-            temp = createFileItem(name);
+            temp = createFileItem();
             tempOutput = temp.getOutputStream();
             byte[] buffer = new byte[1024];
             while (templateInput.read(buffer) > -1) {
@@ -211,8 +219,8 @@ public class TemplateAnalyseUtil {
         }
     }
 
-    public static FileItem createFileItem(String name) {
-        return DISK_FILE_ITEM_FACTORY.createItem("file", "application/msword", true, name);
+    public static FileItem createFileItem() {
+        return DISK_FILE_ITEM_FACTORY.createItem(ExcelHelperAutoConfiguration.getFormFieldName(), ExcelHelper.CONTENT_TYPE, true, UUID.randomUUID().toString().concat(ExcelHelper.XLSX_FILE_SUFFIX));
     }
 
     public static String buildName(String name){
