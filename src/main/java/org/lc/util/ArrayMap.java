@@ -106,6 +106,7 @@ public class ArrayMap<K, V> implements Map<K, V>, Serializable, Cloneable {
                 keys[i] = null;
                 V value = values[i];
                 values[i] = null;
+                size--;
                 return value;
             }
         }
