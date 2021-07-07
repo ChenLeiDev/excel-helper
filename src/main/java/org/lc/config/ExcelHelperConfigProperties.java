@@ -15,16 +15,32 @@ public class ExcelHelperConfigProperties {
 
     private String templatePath;
 
+    public String getFormFieldName() {
+        return formFieldName;
+    }
+
+    public void setFormFieldName(String formFieldName) {
+        this.formFieldName = formFieldName;
+    }
+
+    public Boolean getMultiThread() {
+        return multiThread;
+    }
+
+    public void setMultiThread(Boolean multiThread) {
+        this.multiThread = multiThread;
+    }
+
     public Integer getMultiThreadNum() {
         return multiThreadNum;
     }
 
-    public Integer getPageLimit() {
-        return pageLimit;
-    }
-
     public void setMultiThreadNum(Integer multiThreadNum) {
         this.multiThreadNum = multiThreadNum;
+    }
+
+    public Integer getPageLimit() {
+        return pageLimit;
     }
 
     public void setPageLimit(Integer pageLimit) {
@@ -37,21 +53,5 @@ public class ExcelHelperConfigProperties {
 
     public void setTemplatePath(String templatePath) {
         this.templatePath = templatePath;
-    }
-
-    public Boolean getMultiThread() {
-        return multiThread;
-    }
-
-    public void setMultiThread(Boolean multiThread) {
-        this.multiThread = multiThread;
-    }
-
-    public String getFormFieldName() {
-        return formFieldName;
-    }
-
-    public void setFormFieldName(String formFieldName) {
-        this.formFieldName = formFieldName;
     }
 }
